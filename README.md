@@ -1,0 +1,3 @@
+# wordindexstorm
+mvn clean package 
+
