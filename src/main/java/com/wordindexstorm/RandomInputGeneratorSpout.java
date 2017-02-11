@@ -13,9 +13,9 @@ public class RandomInputGeneratorSpout extends BaseRichSpout {
 
   private static final long serialVersionUID = -4114951263153715761L;
 	SpoutOutputCollector collector;
-	int maxUsers = 1000;
-	int maxWordsPerStmt = 6;
-	int wordLength = 10;
+	int maxUsers = 1000000;
+	int maxWordsPerStmt = 10;
+	int wordLength = 17;
 
 	public void nextTuple() {
 		String line = getLine();
@@ -23,7 +23,7 @@ public class RandomInputGeneratorSpout extends BaseRichSpout {
   }
 
 	/*
-	 * Use same logic as wordindex for lika to generate input
+	 * Use same logic as wordindex for dynox to generate input
 	 */
 	private String getLine() {
 		long userId = 0 + (long)(Math.random() * maxUsers);	
@@ -39,6 +39,7 @@ public class RandomInputGeneratorSpout extends BaseRichSpout {
       sb.append(' ');
     }
     sb.append(generateWord(userId));
+    System.out.println("Generated line : " + sb.toString());
     return (sb.toString());
   }
 	

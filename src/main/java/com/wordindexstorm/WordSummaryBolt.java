@@ -23,7 +23,8 @@ public class WordSummaryBolt extends BaseBasicBolt{
   public void prepare(Map stormConf, TopologyContext context) {
   	int boltId = context.getThisTaskId();
     int basePort = 6300;
-    int thisPort = (basePort % boltId) + boltId + 1;
+    //int thisPort = (basePort % boltId) + boltId + 1;
+    int thisPort = basePort;
     jedis = new Jedis("localhost", thisPort);   
     this.minHeap = new MinHeap(k);
   }
@@ -36,22 +37,29 @@ public class WordSummaryBolt extends BaseBasicBolt{
 		String key = word + "." + userId;	
 		Long value = jedis.incr(key);
 		
-		
 		// Save topK
-		Set<redis.clients.jedis.Tuple> tuples = jedis.zrangeWithScores(word, 0, 1);
+		updateTopK(word+"h", userId, value);
+		
+		// Update jedis list for each word 
+		jedis.sadd(word, userId);
+		
+  }
+	
+	
+	void updateTopK(String word, String userId, Long v) {
+		double value = v;
+		Set<redis.clients.jedis.Tuple> tuples = 
+				(Set<redis.clients.jedis.Tuple>)jedis.zrangeWithScores(word, 0, k);
 		if (tuples == null || tuples.isEmpty() || tuples.size() < k) {
 			jedis.zadd(word, value, userId);
 		} else {
 			redis.clients.jedis.Tuple t = tuples.iterator().next();
 			if (t.getScore() < value) {
-				jedis.zrem(word, userId);
+				jedis.zrem(word, t.getElement());
 				jedis.zadd(word, value, userId);
 			}
 		}
-		
-		// Update jedis list for each word 
-		jedis.sadd(word, userId);
-  }
+	}
 
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
 		declarer.declare(new Fields("summary"));
