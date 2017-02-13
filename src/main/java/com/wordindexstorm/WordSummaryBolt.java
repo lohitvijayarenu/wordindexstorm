@@ -16,20 +16,25 @@ public class WordSummaryBolt extends BaseBasicBolt{
 
   private static final long serialVersionUID = 638113626345284876L;
   Jedis jedis = null;
-  MinHeap minHeap = null;
   int k = 10;
+  long count = 0;
   
   @Override
   public void prepare(Map stormConf, TopologyContext context) {
-  	int boltId = context.getThisTaskId();
+  	//int boltId = context.getThisTaskId();
+  	int boltId = context.getThisTaskIndex();
     int basePort = 6300;
-    //int thisPort = (basePort % boltId) + boltId + 1;
-    int thisPort = basePort;
+    int thisPort = (basePort + boltId);
+    System.out.println("WordSummaryBolt " + boltId + " using redis port " + thisPort);
     jedis = new Jedis("localhost", thisPort);   
-    this.minHeap = new MinHeap(k);
   }
 
 	public void execute(Tuple input, BasicOutputCollector collector) {
+		count++;
+		if ((count % 100000) == 0) {
+			System.out.println("WordSummaryBolt processed " + count);
+		}
+		
 		String word = input.getString(0);
 		String userId = input.getString(1);
 		
@@ -41,8 +46,7 @@ public class WordSummaryBolt extends BaseBasicBolt{
 		updateTopK(word+"h", userId, value);
 		
 		// Update jedis list for each word 
-		jedis.sadd(word, userId);
-		
+		jedis.sadd(word, userId);		
   }
 	
 	

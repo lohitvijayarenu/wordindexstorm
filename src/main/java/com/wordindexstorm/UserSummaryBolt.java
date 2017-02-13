@@ -17,19 +17,25 @@ public class UserSummaryBolt extends BaseBasicBolt {
   private static final long serialVersionUID = 6157289959700753098L;
   Jedis jedis = null;
   int k = 10;
+  long count = 0;
   
   @Override
   public void prepare(Map stormConf, TopologyContext context) {
-    int boltId = context.getThisTaskId();
-    int basePort = 6300;
-    //int thisPort = (basePort % boltId) + boltId + 1;
-    int thisPort = basePort;
+  	//int boltId = context.getThisTaskId();
+  	int boltId = context.getThisTaskIndex();    
+  	int basePort = 6300;
+    int thisPort = (basePort + boltId);
     jedis = new Jedis("localhost", thisPort);    
+    System.out.println("UserSummaryBolt " + boltId + " using redis port " + thisPort);
   }
 
 	public void execute(Tuple input, BasicOutputCollector collector) {
 		String userId = input.getString(0);
 		String[] words = input.getString(1).split("\\W+");
+		count++;
+		if ((count % 100000) == 0) {
+			System.out.println("UserSummaryBolt processed " + count);
+		}
 		
 		for (String word : words) {
 			// User userId + word

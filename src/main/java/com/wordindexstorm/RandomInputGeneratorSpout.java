@@ -39,7 +39,6 @@ public class RandomInputGeneratorSpout extends BaseRichSpout {
       sb.append(' ');
     }
     sb.append(generateWord(userId));
-    System.out.println("Generated line : " + sb.toString());
     return (sb.toString());
   }
 	
