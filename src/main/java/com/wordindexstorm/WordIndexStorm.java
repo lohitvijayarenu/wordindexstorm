@@ -17,10 +17,10 @@ public class WordIndexStorm {
 		builder.setSpout("spout", new RandomInputGeneratorSpout(), 4);
 		builder.setBolt("userextract", new UserExtractBolt(), 4)
 			.shuffleGrouping("spout");
-		builder.setBolt("usersummary", new UserSummaryBolt(), 16)
+		builder.setBolt("usersummary", new UserSummaryBolt(), 4)
 		  .setNumTasks(4)
     	.fieldsGrouping("userextract", new Fields("userid"));
-		builder.setBolt("wordsummary", new WordSummaryBolt(), 16)
+		builder.setBolt("wordsummary", new WordSummaryBolt(), 4)
 			.setNumTasks(4)
 			.fieldsGrouping("usersummary", new Fields("word"));
   

@@ -7,7 +7,8 @@ public class JedisConnectionCache {
 	int numConnections = 16;
 	JedisConnectionCache() {
 		// Hardcode for now
-		String[] hosts = new String[]{"10.0.0.30", "10.0.0.31", "10.0.0.32", "10.0.0.33"};
+		String[] hosts = new String[]{"ip-10-0-0-30", "ip-10-0-0-31", 
+				"ip-10-0-0-32", "ip-10-0-0-33"};
 		int[] ports = new int[]{6300, 6301, 6302, 6303};
 		
 		jedisConnections = new Jedis[16];
