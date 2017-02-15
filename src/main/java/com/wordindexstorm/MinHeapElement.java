@@ -1,16 +1,17 @@
 package com.wordindexstorm;
 
-import java.util.Comparator;
+import java.io.Serializable;
 
-public class MinHeapElement implements Comparator<MinHeapElement>{
-	public long count;
+public class MinHeapElement implements Serializable, Comparable<MinHeapElement>{
+	
+  private static final long serialVersionUID = 5790756323215886666L;
+	public Long count;
 	public String element;
 	MinHeapElement(Long value, String element) {
 		this.count = value;
 		this.element = element;
 	}
-
-	public int compare(MinHeapElement o1, MinHeapElement o2) {
-		return (int) (o1.count - o2.count);
+	public int compareTo(MinHeapElement o) {
+    return (int) (count - o.count);
   }
 }

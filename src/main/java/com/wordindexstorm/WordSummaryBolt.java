@@ -1,5 +1,6 @@
 package com.wordindexstorm;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
@@ -18,6 +19,7 @@ public class WordSummaryBolt extends BaseBasicBolt{
   JedisConnectionCache jedisConnections = null;
   int k = 10;
   long count = 0;
+  MinHeap minHeap;
   
   
   @Override
@@ -25,6 +27,7 @@ public class WordSummaryBolt extends BaseBasicBolt{
   	int boltId = context.getThisTaskIndex();
     System.out.println("WordSummaryBolt " + boltId);
     jedisConnections = new JedisConnectionCache();
+    minHeap = new MinHeap();
   }
 
 	public void execute(Tuple input, BasicOutputCollector collector) {
@@ -38,8 +41,7 @@ public class WordSummaryBolt extends BaseBasicBolt{
 		
 		// Update word <==> userId count
 		String key = word + "." + userId;
-		Long value = jedisConnections.getJedisConnection(key).incr(key);
-		
+		Long value = jedisConnections.getJedisConnection(key).incr(key);	
 		// Save topK
 		updateTopK(word+"h", userId, value);
 		
@@ -47,21 +49,25 @@ public class WordSummaryBolt extends BaseBasicBolt{
 		jedisConnections.getJedisConnection(word).sadd(word, userId);		
   }
 	
-	
-	void updateTopK(String word, String userId, Long v) {
-		double value = v;
+	void updateTopK(String word, String userId, Long v)  {
 		Jedis jedis = jedisConnections.getJedisConnection(word);
-		Set<redis.clients.jedis.Tuple> tuples = 
-				(Set<redis.clients.jedis.Tuple>)jedis.zrangeWithScores(word, 0, k);
-		if (tuples == null || tuples.isEmpty() || tuples.size() < k) {
-			jedis.zadd(word, value, userId);
-		} else {
-			redis.clients.jedis.Tuple t = tuples.iterator().next();
-			if (t.getScore() < value) {
-				jedis.zrem(word, t.getElement());
-				jedis.zadd(word, value, userId);
-			}
-		}
+		minHeap = new MinHeap();
+		String topKBlob = jedis.get(word);
+		try {
+			if(topKBlob != null) {
+				minHeap.deserialize(topKBlob);
+			} 
+			minHeap.add(new MinHeapElement(v, userId), k);
+			topKBlob = minHeap.serialize();
+			jedis.set(word, topKBlob);
+			
+    } catch (ClassNotFoundException e) {
+	    e.printStackTrace();
+    } catch (IOException e) {
+	    e.printStackTrace();
+    }
+		minHeap = null;
+
 	}
 
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {

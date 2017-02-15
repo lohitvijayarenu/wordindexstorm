@@ -1,5 +1,6 @@
 package com.wordindexstorm;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
@@ -18,12 +19,14 @@ public class UserSummaryBolt extends BaseBasicBolt {
   JedisConnectionCache jedisConnections = null;
   int k = 10;
   long count = 0;
+  MinHeap minHeap = null;
   
   @Override
   public void prepare(Map stormConf, TopologyContext context) {
   	int boltId = context.getThisTaskIndex();
     System.out.println("WordSummaryBolt " + boltId);
     jedisConnections = new JedisConnectionCache();
+    minHeap = new MinHeap();
   }
 
 	public void execute(Tuple input, BasicOutputCollector collector) {
@@ -49,19 +52,23 @@ public class UserSummaryBolt extends BaseBasicBolt {
   }
 	
 	void updateTopK(String userId, String word, Long v) {
-		double value = v;
 		Jedis jedis = jedisConnections.getJedisConnection(userId);
-		Set<redis.clients.jedis.Tuple> tuples = 
-				(Set<redis.clients.jedis.Tuple>)jedis.zrangeWithScores(userId, 0, k);
-		if (tuples == null || tuples.isEmpty() || tuples.size() < k) {
-			jedis.zadd(userId, value, word);
-		} else {
-			redis.clients.jedis.Tuple t = tuples.iterator().next();
-			if (t.getScore() < value) {
-				jedis.zrem(userId, t.getElement());
-				jedis.zadd(userId, value, word);
-			}
-		}
+		minHeap = new MinHeap();
+		String topKBlob = jedis.get(userId);
+		try {
+			if(topKBlob != null) {
+				minHeap.deserialize(topKBlob);
+			} 
+			minHeap.add(new MinHeapElement(v, word), k);
+			topKBlob = minHeap.serialize();
+			jedis.set(userId, topKBlob);
+			
+    } catch (ClassNotFoundException e) {
+	    e.printStackTrace();
+    } catch (IOException e) {
+	    e.printStackTrace();
+    }
+		minHeap = null;
 	}
 
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
