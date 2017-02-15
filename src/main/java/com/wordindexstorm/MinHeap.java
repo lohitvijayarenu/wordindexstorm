@@ -7,8 +7,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Base64;
-import java.util.Comparator;
 import java.util.PriorityQueue;
+import javax.xml.bind.DatatypeConverter;
 
 public class MinHeap implements Serializable {
 
@@ -38,11 +38,11 @@ public class MinHeap implements Serializable {
     
     oos.writeObject( minHeap );
     oos.close();
-    return Base64.getEncoder().encodeToString(baos.toByteArray());
+    return DatatypeConverter.printBase64Binary(baos.toByteArray());
 	}
 	
 	void deserialize(String s) throws IOException, ClassNotFoundException {
-		byte [] data = Base64.getDecoder().decode(s);
+		byte [] data = DatatypeConverter.parseBase64Binary(s);
     ObjectInputStream ois = new ObjectInputStream( 
                                     new ByteArrayInputStream(data));
     minHeap  = 
