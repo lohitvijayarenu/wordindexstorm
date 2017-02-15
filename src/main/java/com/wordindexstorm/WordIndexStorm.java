@@ -14,13 +14,13 @@ public class WordIndexStorm {
 			throws AlreadyAliveException, InvalidTopologyException {
 
 		TopologyBuilder builder = new TopologyBuilder();
-		builder.setSpout("spout", new RandomInputGeneratorSpout(), 4);
-		builder.setBolt("userextract", new UserExtractBolt(), 4)
+		builder.setSpout("spout", new RandomInputGeneratorSpout(), 1);
+		builder.setBolt("userextract", new UserExtractBolt(), 1)
 			.shuffleGrouping("spout");
 		builder.setBolt("usersummary", new UserSummaryBolt(), 4)
 		  .setNumTasks(4)
     	.fieldsGrouping("userextract", new Fields("userid"));
-		builder.setBolt("wordsummary", new WordSummaryBolt(), 4)
+		builder.setBolt("wordsummary", new WordSummaryBolt(), 16)
 			.setNumTasks(4)
 			.fieldsGrouping("usersummary", new Fields("word"));
   

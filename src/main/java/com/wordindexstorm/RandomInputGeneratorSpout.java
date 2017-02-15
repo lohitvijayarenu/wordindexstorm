@@ -17,8 +17,25 @@ public class RandomInputGeneratorSpout extends BaseRichSpout {
 	int maxWordsPerStmt = 10;
 	int wordLength = 17;
 	long startTime;
+  int count = 0;
+  int eventsPerSecond = 1000;
+  long currStartTime = System.currentTimeMillis();
+  long period = 1000;
 
 	public void nextTuple() {
+		eventsPerSecond--;
+		if (eventsPerSecond < 0) {
+			long now = System.currentTimeMillis();
+			long currEndTime = currStartTime + period;
+			if (now < currEndTime) {
+				try {
+	        wait(currEndTime - now);
+        } catch (InterruptedException e) {
+        }
+			}
+			eventsPerSecond = 10000;
+			currStartTime = System.currentTimeMillis();
+		}
 		String line = getLine();
 		collector.emit(new Values(line));
   }
