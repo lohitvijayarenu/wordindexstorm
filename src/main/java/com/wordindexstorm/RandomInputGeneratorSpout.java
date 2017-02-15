@@ -45,7 +45,7 @@ public class RandomInputGeneratorSpout extends BaseRichSpout {
 	
 	private String generateWord(long userid) {
     StringBuilder sb = new StringBuilder();
-    double probA = 0.7;
+    double probA = (userid % 2 == 0) ? 0.7 : 0.3;
     for (int i = 0; i < wordLength; i++) {
       sb.append(Math.random() < probA ? 'A' : 'B');
     }
