@@ -15,18 +15,15 @@ import backtype.storm.tuple.Values;
 public class UserSummaryBolt extends BaseBasicBolt {
 
   private static final long serialVersionUID = 6157289959700753098L;
-  Jedis jedis = null;
+  JedisConnectionCache jedisConnections = null;
   int k = 10;
   long count = 0;
   
   @Override
   public void prepare(Map stormConf, TopologyContext context) {
-  	//int boltId = context.getThisTaskId();
-  	int boltId = context.getThisTaskIndex();    
-  	int basePort = 6300;
-    int thisPort = (basePort + boltId);
-    jedis = new Jedis("localhost", thisPort);    
-    System.out.println("UserSummaryBolt " + boltId + " using redis port " + thisPort);
+  	int boltId = context.getThisTaskIndex();
+    System.out.println("WordSummaryBolt " + boltId);
+    jedisConnections = new JedisConnectionCache();
   }
 
 	public void execute(Tuple input, BasicOutputCollector collector) {
@@ -40,9 +37,9 @@ public class UserSummaryBolt extends BaseBasicBolt {
 		for (String word : words) {
 			// User userId + word
 			String key = userId + "." + word;			
-			Long value = jedis.incr(key);
+			Long value = jedisConnections.getJedisConnection(key).incr(key);
 			// Update user id and list of words
-			jedis.sadd(word, userId);
+			jedisConnections.getJedisConnection(word).sadd(word, userId);
 			// Save topK
 			updateTopK(userId+"h", word, value);
 			
@@ -53,6 +50,7 @@ public class UserSummaryBolt extends BaseBasicBolt {
 	
 	void updateTopK(String userId, String word, Long v) {
 		double value = v;
+		Jedis jedis = jedisConnections.getJedisConnection(userId);
 		Set<redis.clients.jedis.Tuple> tuples = 
 				(Set<redis.clients.jedis.Tuple>)jedis.zrangeWithScores(userId, 0, k);
 		if (tuples == null || tuples.isEmpty() || tuples.size() < k) {

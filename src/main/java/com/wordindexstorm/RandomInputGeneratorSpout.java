@@ -13,9 +13,10 @@ public class RandomInputGeneratorSpout extends BaseRichSpout {
 
   private static final long serialVersionUID = -4114951263153715761L;
 	SpoutOutputCollector collector;
-	int maxUsers = 1000000;
+	int maxUsers = 100000000;
 	int maxWordsPerStmt = 10;
 	int wordLength = 17;
+	long startTime;
 
 	public void nextTuple() {
 		String line = getLine();
@@ -44,7 +45,7 @@ public class RandomInputGeneratorSpout extends BaseRichSpout {
 	
 	private String generateWord(long userid) {
     StringBuilder sb = new StringBuilder();
-    double probA = 0.5;
+    double probA = 0.7;
     for (int i = 0; i < wordLength; i++) {
       sb.append(Math.random() < probA ? 'A' : 'B');
     }

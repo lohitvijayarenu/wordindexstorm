@@ -17,13 +17,15 @@ public class WordIndexStorm {
 		builder.setSpout("spout", new RandomInputGeneratorSpout(), 4);
 		builder.setBolt("userextract", new UserExtractBolt(), 4)
 			.shuffleGrouping("spout");
-		builder.setBolt("usersummary", new UserSummaryBolt(), 4)
+		builder.setBolt("usersummary", new UserSummaryBolt(), 16)
+		  .setNumTasks(4)
     	.fieldsGrouping("userextract", new Fields("userid"));
-		builder.setBolt("wordsummary", new WordSummaryBolt(), 4)
+		builder.setBolt("wordsummary", new WordSummaryBolt(), 16)
+			.setNumTasks(4)
 			.fieldsGrouping("usersummary", new Fields("word"));
   
 		Config conf = new Config();
-		conf.setNumWorkers(1);
+		conf.setNumWorkers(16);
 
 		StormSubmitter.submitTopology("wordindex", conf, 
 				builder.createTopology());
