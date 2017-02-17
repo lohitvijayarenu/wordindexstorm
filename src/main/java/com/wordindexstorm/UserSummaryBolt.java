@@ -19,6 +19,8 @@ public class UserSummaryBolt extends BaseBasicBolt {
   JedisConnectionCache jedisConnections = null;
   int k = 10;
   long count = 0;
+  long startTime = System.currentTimeMillis();
+  long interval = 10000;
   MinHeap minHeap = null;
   
   @Override
@@ -35,6 +37,11 @@ public class UserSummaryBolt extends BaseBasicBolt {
 		count++;
 		if ((count % 100000) == 0) {
 			System.out.println("UserSummaryBolt processed " + count);
+		}
+		long now = System.currentTimeMillis();
+		if ((now - startTime) > interval) {
+			startTime = now;
+			System.out.println("Time UserSummaryBolt processed " + count);
 		}
 		
 		for (String word : words) {

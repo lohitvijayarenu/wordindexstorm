@@ -20,7 +20,8 @@ public class WordSummaryBolt extends BaseBasicBolt{
   int k = 10;
   long count = 0;
   MinHeap minHeap;
-  
+  long startTime = System.currentTimeMillis();
+  long interval = 10000;
   
   @Override
   public void prepare(Map stormConf, TopologyContext context) {
@@ -34,6 +35,11 @@ public class WordSummaryBolt extends BaseBasicBolt{
 		count++;
 		if ((count % 100000) == 0) {
 			System.out.println("WordSummaryBolt processed " + count);
+		}
+		long now = System.currentTimeMillis();
+		if ((now - startTime) > interval) {
+			startTime = now;
+			System.out.println("Time WordSummaryBolt processed " + count);
 		}
 		
 		String word = input.getString(0);

@@ -18,22 +18,30 @@ public class RandomInputGeneratorSpout extends BaseRichSpout {
 	int wordLength = 17;
 	long startTime;
   int count = 0;
-  int eventsPerSecond = 1000;
+  int EVENTS_PER_SECOND = 10000;
+  int eventsPerSecond = EVENTS_PER_SECOND;
   long currStartTime = System.currentTimeMillis();
+  long logStartTime = currStartTime;
+  long timeInterval = 10000;
   long period = 1000;
+  
 
 	public void nextTuple() {
-		eventsPerSecond--;
+		eventsPerSecond--; count++;
 		if (eventsPerSecond < 0) {
 			long now = System.currentTimeMillis();
+			if ((now - logStartTime) > timeInterval) {
+				logStartTime = now;
+				System.out.println("Time RandomInputGenerator processed " + count);
+			}
 			long currEndTime = currStartTime + period;
 			if (now < currEndTime) {
 				try {
-	        wait(currEndTime - now);
+	        Thread.sleep(currEndTime - now);
         } catch (InterruptedException e) {
         }
 			}
-			eventsPerSecond = 10000;
+			eventsPerSecond = EVENTS_PER_SECOND;
 			currStartTime = System.currentTimeMillis();
 		}
 		String line = getLine();

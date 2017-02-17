@@ -15,12 +15,12 @@ public class WordIndexStorm {
 
 		TopologyBuilder builder = new TopologyBuilder();
 		builder.setSpout("spout", new RandomInputGeneratorSpout(), 1);
-		builder.setBolt("userextract", new UserExtractBolt(), 1)
+		builder.setBolt("userextract", new UserExtractBolt(), 4)
 			.shuffleGrouping("spout");
 		builder.setBolt("usersummary", new UserSummaryBolt(), 4)
 		  .setNumTasks(4)
     	.fieldsGrouping("userextract", new Fields("userid"));
-		builder.setBolt("wordsummary", new WordSummaryBolt(), 16)
+		builder.setBolt("wordsummary", new WordSummaryBolt(), 20)
 			.setNumTasks(4)
 			.fieldsGrouping("usersummary", new Fields("word"));
   
